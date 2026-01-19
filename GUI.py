@@ -22,6 +22,12 @@ class Program(QtWidgets.QMainWindow, ydt_ui.Ui_MainWindow):
     recentOpened = []
     gamePath = ''
     
+    def save_config(self):
+        config = configparser.ConfigParser()
+        config['SETTINGS'] = {'recents': self.recentOpened, 'gamepath': self.gamePath}
+        with open('data/ydt.ini', 'w', encoding='utf-8') as configfile:
+            config.write(configfile)
+    
     def load_config(self):
         if os.path.exists('data/ydt.ini'):
             config = configparser.ConfigParser()
@@ -29,10 +35,7 @@ class Program(QtWidgets.QMainWindow, ydt_ui.Ui_MainWindow):
             self.recentOpened = ast.literal_eval(config['SETTINGS']['recents'])
             self.gamePath = config['SETTINGS']['gamepath']
         else:
-            config = configparser.ConfigParser()
-            config['SETTINGS'] = {'recents': [], 'gamepath': ''}
-            with open('data/ydt.ini', 'w', encoding='utf-8') as configfile:
-                config.write(configfile)
+            self.save_config()
     
     def locate_game(self):
         path = QtWidgets.QFileDialog.getExistingDirectory(self, 'Locate Game')
@@ -382,14 +385,7 @@ v1.0
     def quit_gui(self):
         self.player.setSource(QtCore.QUrl.fromLocalFile(''))
         if os.path.exists('.temp'): shutil.rmtree('.temp')
-        
-        config = configparser.ConfigParser()
-        config['SETTINGS'] = {
-            'recents': self.recentOpened,
-            'gamepath': self.gamePath
-            }
-        with open('data/ydt.ini', 'w', encoding='utf-8') as configfile:
-            config.write(configfile)
+        self.save_config()
 
 def excepthook(exc_type, exc_value, exc_tb):
     tb = "".join(traceback.format_exception(exc_type, exc_value, exc_tb))
