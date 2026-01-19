@@ -21,7 +21,8 @@ def getfiles(filepath):
         data = f.read()
     
     result = []
-    for i in range(len(data)//2):
+    lastfound = 0
+    for i in range(len(data)):
         if data[i:i+4] in targets:
             start = i
             while start > 0 and data[start-1] != 0:
@@ -33,16 +34,19 @@ def getfiles(filepath):
                 name = data[start:i+4].decode('ascii').strip('\x00')
                 if bytes(name, 'ascii') in targets: continue
                 if bytes(name[-4:], 'ascii') in targets:
+                    if i - lastfound > 100:
+                        continue
+                    lastfound = i
                     result.append([name])
             except:
                 pass
 
     startpos = 0
     for i, v in enumerate(result):
-        startpos = data.find(bytes(v[0], 'ascii'), startpos, len(data)//2)
+        startpos = data.find(bytes(v[0], 'ascii'), startpos, len(data))
         if startpos != -1: startpos += len(v[0])
         if i < len(result)-1:
-            endpos = data.find(bytes(result[i+1][0], 'ascii'), startpos, len(data)//2)
+            endpos = data.find(bytes(result[i+1][0], 'ascii'), startpos, len(data))
         elif len(result) == 1:
             endpos = data.find(b'DDS', startpos, startpos+18)
         else:
@@ -97,4 +101,5 @@ def extract_yd(filepath, output_folder="extracted", just_read=False, selected=""
     return result
 
 if __name__ == "__main__":
-    print(*extract_yd(filepath='work/tex/menu.tex', just_read=False, preview=True), sep='\n')
+    # print(*extract_yd(filepath='work/tex/menu.tex', just_read=False, preview=True), sep='\n')
+    print(*getfiles('work/snd/menu.snd'), sep='\n')

@@ -5,6 +5,7 @@ import ast
 from extractContent import *
 from replaceContent import *
 from convertText import *
+from manipulateCars import *
 
 from PyQt6 import QtWidgets, QtGui, QtCore, QtMultimedia
 from PyQt6.QtCore import QCoreApplication, Qt
@@ -16,14 +17,58 @@ class Program(QtWidgets.QMainWindow, ydt_ui.Ui_MainWindow):
     currentZoom = 0
     currentOpened = ''
     currentIni = None
-    recentOpened = []
     convertSwap = True
+    
+    recentOpened = []
+    gamePath = ''
     
     def load_config(self):
         if os.path.exists('data/ydt.ini'):
             config = configparser.ConfigParser()
             config.read('data/ydt.ini')
             self.recentOpened = ast.literal_eval(config['SETTINGS']['recents'])
+            self.gamePath = config['SETTINGS']['gamepath']
+        else:
+            config = configparser.ConfigParser()
+            config['SETTINGS'] = {'recents': [], 'gamepath': ''}
+            with open('data/ydt.ini', 'w', encoding='utf-8') as configfile:
+                config.write(configfile)
+    
+    def locate_game(self):
+        path = QtWidgets.QFileDialog.getExistingDirectory(self, 'Locate Game')
+        if path == '':
+            return
+        if not os.path.isdir(path + '/Cars'):
+            QMessageBox.warning(self, 'Invalid Yerevan Drive folder', 'Not valid Yerevan Drive root folder')
+            return
+        self.gamePath = path
+        self.locateLabel.setText(path)
+        self.open_cars()
+        
+    def open_cars(self):
+        cars = get_params(self.gamePath + '/Cars')
+        
+        for k, v in cars.items():
+            QTreeWidgetItem(self.carTree, [k])
+            
+    def car_select_changed(self):
+        if self.carTree.selectedItems():
+            cars = get_params(self.gamePath + '/Cars')
+            for n, i in enumerate(cars[self.carTree.selectedItems()[0].text(0)]):
+                self.paramsTable.setItem(n, 0, QtWidgets.QTableWidgetItem(str(round(struct.unpack('f', i)[0], 2))))
+            self.paramsTable.setColumnWidth(0, self.groupBox_3.width()//2)
+    
+    def save_params(self):
+        if self.carTree.selectedItems():
+            reply = QMessageBox.question(self, 'Replacing', 'Do you really want to replace original strings?')
+            if reply != 16384:
+                return
+
+            params = []
+            for i in range(self.paramsTable.rowCount()):
+                params.append(float(self.paramsTable.item(i, 0).text()))
+            replace_params(self.gamePath + '/Cars/' + self.carTree.selectedItems()[0].text(0), params)
+            QMessageBox.information(self, 'Saving', 'New car parameters saved successfully')
     
     def open_file(self, filepath=''):
         self.close_file()
@@ -117,7 +162,7 @@ class Program(QtWidgets.QMainWindow, ydt_ui.Ui_MainWindow):
         if not self.fileTree.selectedItems():
             return
         
-        if not check_suffix(self.currentOpened, '.ini'):
+        if check_suffix_list(self.currentOpened, ['.tex', '.atx']):
             filepath = QtWidgets.QFileDialog.getOpenFileName(self, "Open File", "", "Image (*.tga *.bmp *.gif *.ppm *.jpg *.tif *.cel *.dds *.png *.psd *.rgb *.bw *.rgba)")[0]
             if not filepath:
                 return
@@ -127,17 +172,31 @@ class Program(QtWidgets.QMainWindow, ydt_ui.Ui_MainWindow):
                 QMessageBox.warning(self, 'Replacing Error', message[1])
             else:
                 QMessageBox.information(self, 'Replacing', message[1])
-        else:
+        elif check_suffix(self.currentOpened, '.snd'):
+            filepath = QtWidgets.QFileDialog.getOpenFileName(self, "Open File", "", "WAVE (*.wav)")[0]
+            if not filepath:
+                return
+            
+            message = replace_yd(self.currentOpened, self.fileTree.selectedItems()[0].text(0), filepath, '.temp/converted')
+            if message[0] == 0:
+                QMessageBox.warning(self, 'Replacing Error', message[1])
+            else:
+                QMessageBox.information(self, 'Replacing', message[1])
+        elif check_suffix(self.currentOpened, '.ini'):
+            reply = QMessageBox.question(self, 'Replacing', 'Do you really want to replace original strings?')
+            if reply != 16384:
+                return
+            
             config = configparser.ConfigParser()
             config.read(self.currentOpened)
 
             for i in range(self.textTable.rowCount()):
-                print(self.textTable.item(i, 0).text(), self.textTable.item(i, 1).text())
                 config[self.fileTree.selectedItems()[0].text(0)][self.textTable.item(i, 0).text()] = convertText(self.textTable.item(i, 1).text())
             
             with open(self.currentOpened, 'w', encoding='ansi') as configfile:
                 config.write(configfile)
                 QMessageBox.information(self, 'Replacing', "Ini file saved successfully!")
+        self.open_file(self.currentOpened)
         
     def select_changed(self):
         if check_suffix_list(self.currentOpened, ['.tex', '.atx']):
@@ -210,8 +269,11 @@ class Program(QtWidgets.QMainWindow, ydt_ui.Ui_MainWindow):
         self.load_config()
 
         self.imageprev.setText('')
+        self.locateLabel.setText(self.gamePath)
         self.stackedWidget.setCurrentWidget(self.page)
         self.tabWidget.setCurrentWidget(self.mainTab)
+        if self.gamePath != '':
+            self.open_cars()
         
         self.actionOpen.triggered.connect(self.open_file)
         self.actionClose_2.triggered.connect(self.close_file)
@@ -231,6 +293,7 @@ v1.0
 """))
         
         self.fileTree.itemSelectionChanged.connect(self.select_changed)
+        self.carTree.itemSelectionChanged.connect(self.car_select_changed)
         self.extractButton.pressed.connect(self.extract_file)
         self.extractAllButton.pressed.connect(self.extract_all)
         self.replaceButton.pressed.connect(self.replace_file)
@@ -238,6 +301,8 @@ v1.0
         self.convertTextButton.pressed.connect(self.text_convert_changed)
         self.swapButton.pressed.connect(self.swap_convert)
         self.searchBar.textChanged.connect(self.search_changed)
+        self.locateButton.pressed.connect(self.locate_game)
+        self.saveParamsButton.pressed.connect(self.save_params)
         
         self.clipboard = QtWidgets.QApplication.clipboard()
         self.copyL.pressed.connect(lambda: self.clipboard.setText(self.plainTextEdit_L.toPlainText().strip()))
@@ -319,7 +384,10 @@ v1.0
         if os.path.exists('.temp'): shutil.rmtree('.temp')
         
         config = configparser.ConfigParser()
-        config['SETTINGS'] = {'recents': self.recentOpened}
+        config['SETTINGS'] = {
+            'recents': self.recentOpened,
+            'gamepath': self.gamePath
+            }
         with open('data/ydt.ini', 'w', encoding='utf-8') as configfile:
             config.write(configfile)
 
