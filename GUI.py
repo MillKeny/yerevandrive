@@ -42,9 +42,9 @@ class Program(QtWidgets.QMainWindow, ydt_ui.Ui_MainWindow):
             config.write(f)
         
     def load_config(self):
-        if os.path.exists('data/ydt.ini'):
+        if os.path.exists(self.resource_path('data/ydt.ini')):
             config = configparser.ConfigParser()
-            config.read('data/ydt.ini')
+            config.read(self.resource_path('data/ydt.ini'))
             self.recentOpened = ast.literal_eval(config['SETTINGS']['recents'])
             self.gamePath = config['SETTINGS']['gamepath']
         else:
@@ -292,7 +292,7 @@ class Program(QtWidgets.QMainWindow, ydt_ui.Ui_MainWindow):
         super().__init__()
         self.setupUi(self)
         self.setWindowTitle("Yerevan Drive Tools")
-        self.setWindowIcon(QtGui.QIcon('data/icon.ico'))
+        self.setWindowIcon(QtGui.QIcon(self.resource_path('data/icon.ico')))
         self.load_config()
 
         self.imageprev.setText('')

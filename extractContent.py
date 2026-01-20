@@ -48,7 +48,9 @@ def getfiles(filepath):
         if i < len(result)-1:
             endpos = data.find(bytes(result[i+1][0], 'ascii'), startpos, len(data))
         elif len(result) == 1:
-            endpos = data.find(b'DDS', startpos, startpos+18)
+            endpos = data.find(b'DDS', startpos, startpos+20)
+            if endpos == -1:
+                endpos = data.find(b'RIFF', startpos, startpos+20)
         else:
             endpos = result[0][1]
         thisdata = data[startpos:endpos]
@@ -102,4 +104,4 @@ def extract_yd(filepath, output_folder="extracted", just_read=False, selected=""
 
 if __name__ == "__main__":
     # print(*extract_yd(filepath='work/tex/menu.tex', just_read=False, preview=True), sep='\n')
-    print(*getfiles('work/snd/menu.snd'), sep='\n')
+    print(*getfiles('avto.snd'), sep='\n')
