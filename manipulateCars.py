@@ -21,7 +21,6 @@ def get_params(carspath):
 def replace_params(car, params):
     with open(car + '/avto.par', 'r+b') as f:
         for n, i in enumerate(poses):
-            print(n)
             f.seek(i)
             f.write(struct.pack('f', params[n]))
             if n == 6:
