@@ -1,4 +1,5 @@
 # Yerevan Drive Tools
+![YDT Logo](data/icon.png)
 Tools for modding Yerevan Drive.  
 Textures, sounds, parameters, etc.
 
