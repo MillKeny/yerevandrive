@@ -1,5 +1,4 @@
 import sys
-import traceback
 import ast
 
 from extractContent import *
@@ -8,8 +7,8 @@ from convertText import *
 from manipulateCars import *
 
 from PyQt6 import QtWidgets, QtGui, QtCore, QtMultimedia
-from PyQt6.QtCore import QCoreApplication, Qt
-from PyQt6.QtWidgets import QMessageBox, QTreeWidgetItem
+from PyQt6.QtCore import Qt
+from PyQt6.QtWidgets import QMessageBox, QTreeWidgetItem, QApplication
 import ydt_ui
     
 class Program(QtWidgets.QMainWindow, ydt_ui.Ui_MainWindow):
@@ -22,12 +21,26 @@ class Program(QtWidgets.QMainWindow, ydt_ui.Ui_MainWindow):
     recentOpened = []
     gamePath = ''
     
+    def resource_path(self, relative_path):
+        if getattr(sys, 'frozen', False):
+            base_path = os.path.dirname(sys.executable)
+        else:
+            base_path = os.path.dirname(__file__)
+        return os.path.join(base_path, relative_path)
+    
     def save_config(self):
         config = configparser.ConfigParser()
-        config['SETTINGS'] = {'recents': self.recentOpened, 'gamepath': self.gamePath}
-        with open('data/ydt.ini', 'w', encoding='utf-8') as configfile:
-            config.write(configfile)
-    
+        config['SETTINGS'] = {
+            'recents': self.recentOpened,
+            'gamepath': self.gamePath
+        }
+
+        config_path = self.resource_path('data/ydt.ini')
+        os.makedirs(os.path.dirname(config_path), exist_ok=True)
+
+        with open(config_path, 'w', encoding='utf-8') as f:
+            config.write(f)
+        
     def load_config(self):
         if os.path.exists('data/ydt.ini'):
             config = configparser.ConfigParser()
@@ -87,6 +100,8 @@ class Program(QtWidgets.QMainWindow, ydt_ui.Ui_MainWindow):
                 return
         self.currentOpened = filepath
         
+        QApplication.setOverrideCursor(Qt.CursorShape.WaitCursor)
+        
         if filepath in self.recentOpened: self.recentOpened.remove(filepath)
         self.recentOpened.insert(0, filepath)
         if len(self.recentOpened) > 10:
@@ -128,6 +143,8 @@ class Program(QtWidgets.QMainWindow, ydt_ui.Ui_MainWindow):
         for i in self.recentOpened:
             if os.path.exists(i): self.menuOpen_Recent.addAction(i)
             else: self.recentOpened.remove(i)
+        
+        QApplication.restoreOverrideCursor()
             
     def extract_file(self):
         if self.fileTree.selectedItems():
@@ -299,7 +316,7 @@ by Artyom "MillKeny" Arzumanyan
 «Երևան Դրայվ»-ի գործիքներ՝ խաղի պարունակությունը փոխելու ու ուսումնասիրելու համար
 Հեղինակ՝ Արտյոմ "MillKeny" Արզումանյան
 
-v1.0
+v1.1
 """))
         
         self.fileTree.itemSelectionChanged.connect(self.select_changed)
@@ -394,17 +411,12 @@ v1.0
         if os.path.exists('.temp'): shutil.rmtree('.temp')
         self.save_config()
 
-def excepthook(exc_type, exc_value, exc_tb):
-    tb = "".join(traceback.format_exception(exc_type, exc_value, exc_tb))
-    QMessageBox.critical(None, "Error", str(tb))
-    print(tb)
-    QtWidgets.QApplication.quit()
-sys.excepthook = excepthook
-
 def main():
     app = QtWidgets.QApplication(sys.argv)
     window = Program()
     window.show()
+    try: window.open_file(sys.argv[1])
+    except: pass
     app.exec()
     window.quit_gui()
 
