@@ -21,12 +21,31 @@ def get_params(carspath):
 def replace_params(car, params):
     with open(car + '/avto.par', 'r+b') as f:
         for n, i in enumerate(poses):
+            print(n)
             f.seek(i)
             f.write(struct.pack('f', params[n]))
-            if n > 5:
+            if n == 6:
                 f.seek(i+4)
                 f.write(struct.pack('f', params[n]))
+                
+def getCarsNPC(carspath):
+    result = {}
+    for subdir, dirs, files in os.walk(carspath):
+        if dirs:
+            continue
+        carname = subdir.split('\\')[-1]
+        with open(subdir + '\\avto.par', 'rb') as f:
+            data = f.read()
+            result[carname] = int.from_bytes(data[436:437])
+            
+    return result
+
+def setCarsNPC(car, state):
+    with open(car + '/avto.par', 'r+b') as f:
+        f.seek(436)
+        f.write(state.to_bytes(1, byteorder="little"))
 
 if __name__ == "__main__":
-    # print(get_params('C:\\Games\\YD\\Cars'))
-    replace_params('.', [0, 0, 0, 0, 0, 0, 0, 0])
+    print(getCarsNPC('C:\\Games\\YD\\Cars'))
+    # replace_params('.', [0, 0, 0, 0, 0, 0, 0, 0])
+    # setCarsNPC('C:\Games\YD_EXP\Cars\HUMMER', 0)

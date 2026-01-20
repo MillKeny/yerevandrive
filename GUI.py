@@ -57,8 +57,11 @@ class Program(QtWidgets.QMainWindow, ydt_ui.Ui_MainWindow):
     def car_select_changed(self):
         if self.carTree.selectedItems():
             cars = get_params(self.gamePath + '/Cars')
+            lastn = 0
             for n, i in enumerate(cars[self.carTree.selectedItems()[0].text(0)]):
                 self.paramsTable.setItem(n, 0, QtWidgets.QTableWidgetItem(str(round(struct.unpack('f', i)[0], 2))))
+                lastn = n
+            self.paramsTable.setItem(lastn+1, 0, QtWidgets.QTableWidgetItem(str(getCarsNPC(self.gamePath + '/Cars')[self.carTree.selectedItems()[0].text(0)])))
             self.paramsTable.setColumnWidth(0, self.groupBox_3.width()//2)
     
     def save_params(self):
@@ -68,9 +71,10 @@ class Program(QtWidgets.QMainWindow, ydt_ui.Ui_MainWindow):
                 return
 
             params = []
-            for i in range(self.paramsTable.rowCount()):
+            for i in range(self.paramsTable.rowCount()-1):
                 params.append(float(self.paramsTable.item(i, 0).text()))
             replace_params(self.gamePath + '/Cars/' + self.carTree.selectedItems()[0].text(0), params)
+            setCarsNPC(self.gamePath + '/Cars/' + self.carTree.selectedItems()[0].text(0), int(self.paramsTable.item(self.paramsTable.rowCount()-1, 0).text()))
             QMessageBox.information(self, 'Saving', 'New car parameters saved successfully')
     
     def open_file(self, filepath=''):
@@ -128,18 +132,21 @@ class Program(QtWidgets.QMainWindow, ydt_ui.Ui_MainWindow):
     def extract_file(self):
         if self.fileTree.selectedItems():
             selected = self.fileTree.selectedItems()[0].text(0)
-            if check_suffix(selected, '.dds'):
-                filters = "DirectDraw Surface (*.dds)"
-            elif check_suffix(selected, '.bmp'):
-                filters = "Bitmap Picture (*.bmp)"
-            elif check_suffix(selected, '.tga'):
-                filters = "Truevision TGA (*.tga)"
-            elif check_suffix(selected, '.jpg'):
-                filters = "JPEG (*.jpg)"
-            filters += ";;PNG Image (*.png)"
+            if check_suffix(self.currentOpened, '.snd'):
+                filters = 'WAVE (*.wav)'
+            else:
+                if check_suffix(selected, '.dds'):
+                    filters = "DirectDraw Surface (*.dds)"
+                elif check_suffix(selected, '.bmp'):
+                    filters = "Bitmap Picture (*.bmp)"
+                elif check_suffix(selected, '.tga'):
+                    filters = "Truevision TGA (*.tga)"
+                elif check_suffix(selected, '.jpg'):
+                    filters = "JPEG (*.jpg)"
+                filters += ";;PNG Image (*.png)"
             filepath = QtWidgets.QFileDialog.getSaveFileName(self, "Extract File", self.fileTree.selectedItems()[0].text(0), filters)
             if filepath[0]:
-                if check_suffix_list(filepath[0], ['.dds', '.bmp', '.tga', '.jpg']):
+                if check_suffix_list(filepath[0], ['.dds', '.bmp', '.tga', '.jpg', '.wav']):
                     shutil.copy('.temp/original/' + selected, filepath[0])
                 elif filepath[0].endswith('.png'):
                     shutil.copy('.temp/previews/' + selected + '.png', filepath[0])

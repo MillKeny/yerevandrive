@@ -1592,7 +1592,7 @@ QProgressBar::chunk
               <bool>true</bool>
              </property>
              <property name="rowCount">
-              <number>8</number>
+              <number>9</number>
              </property>
              <property name="columnCount">
               <number>1</number>
@@ -1644,6 +1644,11 @@ QProgressBar::chunk
              <row>
               <property name="text">
                <string>Speed</string>
+              </property>
+             </row>
+             <row>
+              <property name="text">
+               <string>is NPC</string>
               </property>
              </row>
              <column>
