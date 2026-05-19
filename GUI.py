@@ -5,12 +5,13 @@ from extractContent import *
 from replaceContent import *
 from convertText import *
 from manipulateCars import *
+from trackSelector import *
 
 from PyQt6 import QtWidgets, QtGui, QtCore, QtMultimedia
 from PyQt6.QtCore import Qt
 from PyQt6.QtWidgets import QMessageBox, QTreeWidgetItem, QApplication
 import ydt_ui
-    
+
 class Program(QtWidgets.QMainWindow, ydt_ui.Ui_MainWindow):
     previews = {}
     currentZoom = 0
@@ -54,11 +55,12 @@ class Program(QtWidgets.QMainWindow, ydt_ui.Ui_MainWindow):
         path = QtWidgets.QFileDialog.getExistingDirectory(self, 'Locate Game')
         if path == '':
             return
-        if not os.path.isdir(path + '/Cars'):
+        if not os.path.isdir(path + '/Cars') or not os.path.isdir(path + '/Tracks'):
             QMessageBox.warning(self, 'Invalid Yerevan Drive folder', 'Not valid Yerevan Drive root folder')
             return
         self.gamePath = path
         self.locateLabel.setText(path)
+        self.locateLabel_2.setText(path)
         self.open_cars()
         
     def open_cars(self):
@@ -145,6 +147,21 @@ class Program(QtWidgets.QMainWindow, ydt_ui.Ui_MainWindow):
             else: self.recentOpened.remove(i)
         
         QApplication.restoreOverrideCursor()
+        
+    def selectTrackUI(self):
+        message = selectTrack(self.gamePath, self.trackCombo.currentText())
+        if message[0] == 0:
+            QMessageBox.warning(self, 'Selecting Error', message[1])
+        else:
+            QMessageBox.information(self, 'Selected', message[1])
+            
+    def restoreTracksUI(self):
+        message = restoreTracks(self.gamePath)
+        if message[0] == 0:
+            QMessageBox.warning(self, 'Restoring Error', message[1])
+        else:
+            QMessageBox.information(self, 'Restored', message[1])
+        
             
     def extract_file(self):
         if self.fileTree.selectedItems():
@@ -297,6 +314,7 @@ class Program(QtWidgets.QMainWindow, ydt_ui.Ui_MainWindow):
 
         self.imageprev.setText('')
         self.locateLabel.setText(self.gamePath)
+        self.locateLabel_2.setText(self.gamePath)
         self.stackedWidget.setCurrentWidget(self.page)
         self.tabWidget.setCurrentWidget(self.mainTab)
         if self.gamePath != '':
@@ -329,7 +347,13 @@ v1.1
         self.swapButton.pressed.connect(self.swap_convert)
         self.searchBar.textChanged.connect(self.search_changed)
         self.locateButton.pressed.connect(self.locate_game)
+        self.locateButton_2.pressed.connect(self.locate_game)
         self.saveParamsButton.pressed.connect(self.save_params)
+        self.selectTrackButton.pressed.connect(self.selectTrackUI)
+        self.restoreTracksButton.pressed.connect(self.restoreTracksUI)
+        
+        for i in range(28):
+            self.trackCombo.addItem(f'track{i}.trc')
         
         self.clipboard = QtWidgets.QApplication.clipboard()
         self.copyL.pressed.connect(lambda: self.clipboard.setText(self.plainTextEdit_L.toPlainText().strip()))

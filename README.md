@@ -1,6 +1,6 @@
 # Yerevan Drive Tools
 ![YDT Logo](data/icon.png)  
-Tools for modding Yerevan Drive.  
+Tools for modding **Yerevan Drive**.  
 Textures, sounds, parameters, etc.
 
 ## Installation
@@ -24,9 +24,12 @@ Textures, sounds, parameters, etc.
 	- [x] Codec conversion
 	- [x] Changing
 - [x] **Cars Parameters Manipulating** (.par)
-	- [ ] Understanding structure (some)
-	- [ ] Cars' characteristics (some)
+	- [ ] Understanding structure (some done)
+	- [ ] Cars' characteristics (some done)
 	- [x] Wheels
 	- [x] Change cars appearance
-- **.REF** (3D Models, Material Info, etc..?)
+- [x] **Race Tracks** (.trc)
+	- [ ] Understanding structure
+	- [x] Specific Track Selector
+- [ ] **.REF** (3D Models, Material Info, etc..?)
 	- [ ] Understanding structure
