@@ -149,18 +149,24 @@ class Program(QtWidgets.QMainWindow, ydt_ui.Ui_MainWindow):
         QApplication.restoreOverrideCursor()
         
     def selectTrackUI(self):
-        message = selectTrack(self.gamePath, self.trackCombo.currentText())
-        if message[0] == 0:
-            QMessageBox.warning(self, 'Selecting Error', message[1])
+        if self.gamePath:
+            message = selectTrack(self.gamePath, self.trackCombo.currentText())
+            if message[0] == 0:
+                QMessageBox.warning(self, 'Selecting Error', message[1])
+            else:
+                QMessageBox.information(self, 'Selected', message[1])
         else:
-            QMessageBox.information(self, 'Selected', message[1])
+            QMessageBox.warning(self, 'No Game Path Selected', "Please locate the game path")
             
     def restoreTracksUI(self):
-        message = restoreTracks(self.gamePath)
-        if message[0] == 0:
-            QMessageBox.warning(self, 'Restoring Error', message[1])
+        if self.gamePath:
+            message = restoreTracks(self.gamePath)
+            if message[0] == 0:
+                QMessageBox.warning(self, 'Restoring Error', message[1])
+            else:
+                QMessageBox.information(self, 'Restored', message[1])
         else:
-            QMessageBox.information(self, 'Restored', message[1])
+            QMessageBox.warning(self, 'No Game Path Selected', "Please locate the game path")
         
             
     def extract_file(self):
@@ -334,7 +340,7 @@ by Artyom "MillKeny" Arzumanyan
 «Երևան Դրայվ»-ի գործիքներ՝ խաղի պարունակությունը փոխելու ու ուսումնասիրելու համար
 Հեղինակ՝ Արտյոմ "MillKeny" Արզումանյան
 
-v1.1
+v1.2
 """))
         
         self.fileTree.itemSelectionChanged.connect(self.select_changed)
