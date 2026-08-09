@@ -25,11 +25,13 @@ def check_dds_mipmaps(dds_file, is_data=True):
     return False
 
 def check_dxt(dds_file, is_data=True):
+    
     if not is_data:
         with open(dds_file, 'rb') as f:
             dds_data = f.read()
-            
-    dds_data = dds_file
+    else:
+        dds_data = dds_file
+
     if b'DXT1' in dds_data:
         return 'DXT1'
     elif b'DXT3' in dds_data:
@@ -48,10 +50,10 @@ def convert_yd(file, outdir, mipmaps=False, dxt='DXT3'):
             
             if dxt == 'DXT1':
                 command += ' -dxt1 -32 dxt1'
-            elif dxt == 'DXT3':
-                command += ' -dxt3 -32 dxt3'
             else:
-                return 'Invalid DDS file :('
+                command += ' -dxt3 -32 dxt3'
+            #else:
+            #    return 'Invalid DDS file :('
             
             subprocess.run(command)
             if not os.path.exists(f'{outdir}/{filepath.stem}.dds'):

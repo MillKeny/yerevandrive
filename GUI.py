@@ -55,7 +55,7 @@ class Program(QtWidgets.QMainWindow, ydt_ui.Ui_MainWindow):
         path = QtWidgets.QFileDialog.getExistingDirectory(self, 'Locate Game')
         if path == '':
             return
-        if not os.path.isdir(path + '/Cars') or not os.path.isdir(path + '/Tracks'):
+        if not os.path.exists(path + '/Yerevan Drive.exe'):
             QMessageBox.warning(self, 'Invalid Yerevan Drive folder', 'Not valid Yerevan Drive root folder')
             return
         self.gamePath = path
